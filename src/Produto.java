@@ -1,56 +1,104 @@
-import java.text.NumberFormat;
+﻿import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Objects;
 
 public abstract class Produto {
-    
+
     private static final double MARGEM_PADRAO = 0.2;
-    private String descricao;
+    private static int seqId = 0;
+    
+    private int id;
+    protected String descricao;
     protected double precoCusto;
     protected double margemLucro;
-    
-    /**
-     * Inicializador privado.
-     * @param desc Descrição do produto (mínimo de 3 caracteres)
-     * @param precoCusto Preço do produto (mínimo 0.01)
-     * @param margemLucro Margem de lucro (mínimo 0.01)
-     */
-    private void init(String desc, double precoCusto, double margemLucro) {
-        if ((desc != null) && (desc.length() >= 3) && (precoCusto > 0.0) && (margemLucro > 0.0)) {
-            this.descricao = desc;
-            this.precoCusto = precoCusto;
-            this.margemLucro = margemLucro;
+
+    public Produto(String descricao, double precoCusto, double margemLucro) {
+        this.id = ++seqId;
+        this.descricao = descricao;
+        this.precoCusto = precoCusto;
+        this.setMargemLucro(margemLucro);
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public String getDescricao() {
+        return descricao;
+    }
+
+    public double getPrecoCusto() {
+        return precoCusto;
+    }
+
+    public double getMargemLucro() {
+        return margemLucro;
+    }
+
+    private void setMargemLucro(double margemLucro) {
+        if (margemLucro < 0) {
+            this.margemLucro = MARGEM_PADRAO;
         } else {
-            throw new IllegalArgumentException("Valores inválidos para os dados do produto.");
+            this.margemLucro = margemLucro;
         }
     }
-    
-    /**
-     * Construtor completo protegido (conforme diagrama UML).
-     */
-    protected Produto(String desc, double precoCusto, double margemLucro) {
-        init(desc, precoCusto, margemLucro);
+
+    public double precoVenda() {
+        return precoCusto * (1 + margemLucro);
     }
-    
-    /**
-     * Construtor protegido com margem padrão (conforme diagrama UML).
-     */
-    protected Produto(String desc, double precoCusto) {
-        init(desc, precoCusto, MARGEM_PADRAO);
+
+    // Tarefa 1: Sobrescrita do equals comparando por descrição (case-insensitive)
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || !(obj instanceof Produto)) return false;
+        Produto outro = (Produto) obj;
+        if (this.descricao == null || outro.descricao == null) return false;
+        return this.descricao.equalsIgnoreCase(outro.descricao);
     }
-    
-    /**
-     * Retorna o valor de venda padrão do produto.
-     * @return Valor de venda do produto
-     */
-    public double valorVenda() {
-        return (precoCusto * (1.0 + margemLucro));
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(descricao != null ? descricao.toLowerCase() : 0);
     }
-    
+
+    // Tarefa 2: Assinatura do método abstrato
     /**
-     * Descrição, em string, do produto.
+     * Gera uma linha de texto a partir dos dados do produto.
+     * @return String no formato "tipo;descrição;preçoDeCusto;margemDeLucro;[dataDeValidade]"
      */
+    public abstract String gerarDadosTexto();
+
+    // Tarefa 2: Método para instanciar Produto a partir de uma linha de texto
+    /**
+     * Cria um produto a partir de uma linha de dados em formato texto.
+     * @param linha Linha com os dados do produto.
+     * @return Produto instanciado (Perecivel ou NaoPerecivel)
+     */
+    public static Produto criarDoTexto(String linha) {
+        if (linha == null || linha.trim().isEmpty()) {
+            return null;
+        }
+
+        String[] partes = linha.split(";");
+        int tipo = Integer.parseInt(partes[0].trim());
+        String descricao = partes[1].trim();
+        double precoCusto = Double.parseDouble(partes[2].trim().replace(",", "."));
+        double margemLucro = Double.parseDouble(partes[3].trim().replace(",", "."));
+
+        if (tipo == 1) {
+            return new ProdutoNaoPerecivel(descricao, precoCusto, margemLucro);
+        } else if (tipo == 2) {
+            DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            LocalDate dataValidade = LocalDate.parse(partes[4].trim(), fmt);
+            return new ProdutoPerecivel(descricao, precoCusto, margemLucro, dataValidade);
+        }
+
+        return null;
+    }
+
     @Override
     public String toString() {
-        NumberFormat moeda = NumberFormat.getCurrencyInstance();
-        return descricao + ": " + moeda.format(valorVenda());
+        return String.format("%s (R$ %.2f)", descricao, precoVenda());
     }
 }

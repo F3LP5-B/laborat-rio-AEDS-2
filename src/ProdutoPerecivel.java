@@ -1,11 +1,13 @@
-import java.time.LocalDate;
+﻿import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.Locale;
 
 public class ProdutoPerecivel extends Produto {
 
     private static final double DESCONTO = 0.25;
     private static final int PRAZO_DESCONTO = 7;
-    private LocalDate dataDeValidade;
+    private LocalDate dataValidade;
 
     /**
      * Construtor do produto perecível.
@@ -16,31 +18,34 @@ public class ProdutoPerecivel extends Produto {
      */
     public ProdutoPerecivel(String desc, double precoCusto, double margemLucro, LocalDate validade) {
         super(desc, precoCusto, margemLucro);
-        
-        // Requisito: Não pode ser cadastrado com data de validade anterior ao dia atual
+
+        // Validação: não pode ser cadastrado vencido
         if (validade == null || validade.isBefore(LocalDate.now())) {
             throw new IllegalArgumentException("A data de validade não pode ser anterior à data atual.");
         }
-        this.dataDeValidade = validade;
+        this.dataValidade = validade;
+    }
+
+    public LocalDate getDataValidade() {
+        return dataValidade;
     }
 
     /**
-     * Calcula o valor de venda do produto perecível aplicando as regras de validade e desconto.
-     * @return Valor de venda ajustado
+     * Calcula o preço de venda do produto perecível aplicando as regras de validade e desconto.
      */
     @Override
-    public double valorVenda() {
+    public double precoVenda() {
         LocalDate hoje = LocalDate.now();
 
-        // Requisito: Não pode ser solicitado seu valor de venda se estiver fora da data de validade
-        if (dataDeValidade.isBefore(hoje)) {
+        // Não permite venda se estiver vencido
+        if (dataValidade.isBefore(hoje)) {
             throw new IllegalStateException("Produto fora da data de validade! Venda não permitida.");
         }
 
-        double precoBase = super.valorVenda();
-        long diasParaVencer = ChronoUnit.DAYS.between(hoje, dataDeValidade);
+        double precoBase = super.precoVenda();
+        long diasParaVencer = ChronoUnit.DAYS.between(hoje, dataValidade);
 
-        // Requisito: Desconto de 25% se o vencimento for em até 7 dias a partir de hoje
+        // Aplicar desconto de 25% se vencer em 7 dias ou menos
         if (diasParaVencer <= PRAZO_DESCONTO) {
             precoBase -= (precoBase * DESCONTO);
         }
@@ -48,8 +53,18 @@ public class ProdutoPerecivel extends Produto {
         return precoBase;
     }
 
+    // TAREFA 2: Método exigido pelo guia do laboratório
+    @Override
+    public String gerarDadosTexto() {
+        DateTimeFormatter formatador = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        return String.format(Locale.US, "2;%s;%.2f;%.2f;%s", 
+                descricao, precoCusto, margemLucro, dataValidade.format(formatador));
+    }
+
     @Override
     public String toString() {
-        return super.toString() + " (Validade: " + dataDeValidade + ")";
+        DateTimeFormatter formatador = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        return String.format("%s (R$ %.2f) - Validade: %s", 
+                descricao, precoVenda(), dataValidade.format(formatador));
     }
 }

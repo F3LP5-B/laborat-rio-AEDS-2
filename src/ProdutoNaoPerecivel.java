@@ -1,24 +1,14 @@
+﻿import java.util.Locale;
+
 public class ProdutoNaoPerecivel extends Produto {
 
-    /**
-     * Construtor completo do produto não perecível.
-     */
-    public ProdutoNaoPerecivel(String desc, double precoCusto, double margemLucro) {
-        super(desc, precoCusto, margemLucro);
+    public ProdutoNaoPerecivel(String descricao, double precoCusto, double margemLucro) {
+        super(descricao, precoCusto, margemLucro);
     }
 
-    /**
-     * Construtor sem margem de lucro (utiliza margem padrão).
-     */
-    public ProdutoNaoPerecivel(String desc, double precoCusto) {
-        super(desc, precoCusto);
-    }
-
-    /**
-     * Retorna o valor de venda do produto não perecível.
-     */
+    // Tarefa 2: Implementação do gerarDadosTexto
     @Override
-    public double valorVenda() {
-        return super.valorVenda();
+    public String gerarDadosTexto() {
+        return String.format(Locale.US, "1;%s;%.2f;%.2f", descricao, precoCusto, margemLucro);
     }
 }
