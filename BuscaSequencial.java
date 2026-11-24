@@ -23,8 +23,20 @@ public class BuscaSequencial<T, K extends Comparable<K>> implements IBuscador<T,
 
 	@Override
 	public T buscar(K chave) {
-		// TODO (Tarefa 1): busca sequencial; registre comparações e tempo.
-		return null;
+		inicio = System.nanoTime();
+		comparacoes = 0;
+
+		for (int i = 0; i < quantidade; i++) {
+			comparacoes++;
+			K chaveAtual = extratorDeChave.apply(dados[i]);
+			if (chaveAtual.compareTo(chave) == 0) {
+				termino = System.nanoTime();
+				return dados[i];
+			}
+		}
+
+		termino = System.nanoTime();
+		throw new NoSuchElementException("Elemento não encontrado.");
 	}
 
 	@Override

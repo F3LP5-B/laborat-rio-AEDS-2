@@ -24,8 +24,31 @@ public class BuscaBinaria<T, K extends Comparable<K>> implements IBuscador<T, K>
 
 	@Override
 	public T buscar(K chave) {
-		// TODO (Tarefa 2): busca binária; registre comparações e tempo.
-		return null;
+		inicio = System.nanoTime();
+		comparacoes = 0;
+
+		int esquerda = 0;
+		int direita = quantidade - 1;
+
+		while (esquerda <= direita) {
+			int meio = esquerda + (direita - esquerda) / 2;
+			comparacoes++;
+			K chaveMeio = extratorDeChave.apply(dados[meio]);
+			int comparacao = chave.compareTo(chaveMeio);
+
+			if (comparacao == 0) {
+				termino = System.nanoTime();
+				return dados[meio];
+			}
+			if (comparacao < 0) {
+				direita = meio - 1;
+			} else {
+				esquerda = meio + 1;
+			}
+		}
+
+		termino = System.nanoTime();
+		throw new NoSuchElementException("Elemento não encontrado.");
 	}
 
 	/**
@@ -35,8 +58,21 @@ public class BuscaBinaria<T, K extends Comparable<K>> implements IBuscador<T, K>
 	 *         quantidade, se todas as chaves forem menores.
 	 */
 	public int primeiraPosicaoMaiorOuIgual(K chave) {
-		// TODO (Tarefa 3)
-		return quantidade;
+		int esquerda = 0;
+		int direita = quantidade;
+
+		while (esquerda < direita) {
+			int meio = esquerda + (direita - esquerda) / 2;
+			K chaveMeio = extratorDeChave.apply(dados[meio]);
+			comparacoes++;
+			if (chaveMeio.compareTo(chave) < 0) {
+				esquerda = meio + 1;
+			} else {
+				direita = meio;
+			}
+		}
+
+		return esquerda;
 	}
 
 	@Override
